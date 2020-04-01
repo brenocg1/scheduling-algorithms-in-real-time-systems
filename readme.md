@@ -4,7 +4,7 @@ Para compilar o arquivo use
 
 ``` $ make ```
 
-Para executar o arquivo
+Para executar o arquivo use  
 ``` $ make run ```
 
 Formato padrao de entrada das tarefas
