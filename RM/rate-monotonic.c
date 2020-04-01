@@ -7,7 +7,6 @@
 *-> Description: implementacao do algoritmo rate monotonic 	
 ******************************************************************************
 */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -31,6 +30,7 @@
 // ps: funciona tanto em formato LF e CRLF, no linux. 
 
 typedef struct Task{
+    int id;
     int period;
     int timeExecution;
     int deadline;
@@ -126,6 +126,7 @@ int main(void){
     // armazenando as tarefas num vetor de Tarefas
     Task tarefas[TASKS_NUMBER];
     for(int i = 0; i < TASKS_NUMBER; i++){
+        tarefas[i].id = i;
         tarefas[i].period = mat[i][0];
         tarefas[i].timeExecution = mat[i][1];
         tarefas[i].deadline = mat[i][2];
@@ -158,7 +159,7 @@ int main(void){
         int taskTimeExecution = tarefas[i].timeExecution;
         for(int j = 0; j < mmc; j++){
             if(faixa[j] == -1){
-                faixa[j] = i + 1; //atribuindo tarefa
+                faixa[j] = tarefas[i].id + 1; //atribuindo tarefa
                 taskTimeExecution--;
             }
             if(taskTimeExecution == 0){
