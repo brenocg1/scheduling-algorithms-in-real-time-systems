@@ -1,7 +1,7 @@
 # Implementação de algoritmos de escalonamento em sistemas de tempo real
 
 Para compilar o arquivo  
-> make
+´´´make´´´
 
 Para executar o arquivo
 > make run
