@@ -37,8 +37,8 @@ typedef struct Task{
 }Task;
 
 // funcao para o quick sort saber comparar cada objeto da estrutura
-int cmpTasks(const Task * a, const Task * b){
-    return (int)(a->period - b->period);
+int cmpTasks(const void * a, const void * b){
+    return (int)(((Task *)a)->period - ((Task *)b)->period);
 }
 
 // funcao que devolve mmc de N numeros
