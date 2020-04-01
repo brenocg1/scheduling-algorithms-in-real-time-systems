@@ -1,10 +1,10 @@
 /**
 ******************************************************************************
-*-> file: atv-q1.c
+*-> file: rate-monotonic.c
 *-> author: Breno Campos - brenocg@alu.ufc.br
 *-> version: 1.0
 *-> date: 30/March/2020
-*-> Description: none 	
+*-> Description: implementacao do algoritmo rate monotonic 	
 ******************************************************************************
 */
 
@@ -15,12 +15,33 @@
 
 #define BUFFER_SIZE 1000
 #define STRING_MAX_NAME 40
-#define TASKS_NUMBER 3 //todos os arquivos mandados pelo professor eram apenas 3 processos...
+//todos os arquivos mandados pelo professor eram 
+// apenas 3 processos...
+// mude se seu arquivo tiver mais de 3 processos
+#define TASKS_NUMBER 3 
 
-// funcao q conta as linhas do arquivo
-// para saber quantas tasks tenho no arquivo
-// apesar de que todos os arquivos so tinham 3...
 
+// ** IMPORTANTE **
+// FORMATO PADRAO DO ARQUIVO DE LEITURA DAS TAREFAS
+// P C D
+// 4 1 4
+// 5 2 5
+// 20 4 20
+
+// ps: funciona tanto em formato LF e CRLF, no linux. 
+
+typedef struct Task{
+    int period;
+    int timeExecution;
+    int deadline;
+}Task;
+
+// funcao para o quick sort saber comparar cada objeto da estrutura
+int cmpTasks(const Task * a, const Task * b){
+    return (int)(a->period - b->period);
+}
+
+// funcao que devolve mmc de N numeros
 int get_mmc(int * t, int tSize){
     int initialArray[100];
     
@@ -67,6 +88,7 @@ int main(void){
     fgets(buff, BUFFER_SIZE, file); 
     
     // colocando os valores numa matrix
+    // ps: vc pode melhorar esse trecho escrevendo direto no vetor tarefas
     int mat[TASKS_NUMBER][3];
     int x = -1;
     for (int i = 0; i < TASKS_NUMBER; i++){
@@ -77,7 +99,7 @@ int main(void){
     }
 
     // Calculando Somario do limiar de utilizacao
-    // Teste de escabilidade
+    // Teste de escalabilidade
     float res = 0;
     for(int i = 0; i < TASKS_NUMBER; i++){
         res += (float)mat[i][1] / (float)mat[i][0];
@@ -101,6 +123,24 @@ int main(void){
         periodos[i] = mat[i][0];
     int mmc = get_mmc(periodos, TASKS_NUMBER);    
     
+    // armazenando as tarefas num vetor de Tarefas
+    Task tarefas[TASKS_NUMBER];
+    for(int i = 0; i < TASKS_NUMBER; i++){
+        tarefas[i].period = mat[i][0];
+        tarefas[i].timeExecution = mat[i][1];
+        tarefas[i].deadline = mat[i][2];
+    }
+
+    // Ordenando as tarefas
+    // usando quick sort da stdlib
+    qsort (tarefas, TASKS_NUMBER, sizeof(Task), cmpTasks);
+
+
+    // for(int i = 0; i < TASKS_NUMBER; i++){
+    //     printf("%d %d %d \n", tarefas[i].period, tarefas[i].timeExecution, tarefas[i].deadline);
+    // }
+    
+
     // escalonamento onde vou armezar as tarefas
     int faixa[mmc];
 
@@ -114,8 +154,8 @@ int main(void){
     // * estou considerando que os periodos estao ordenados na matrix
     // tratarei isso dps
     for(int i = 0; i < TASKS_NUMBER; i++){
-        int taskPeriod = mat[i][0];
-        int taskTimeExecution = mat[i][1];
+        int taskPeriod = tarefas[i].period;
+        int taskTimeExecution = tarefas[i].timeExecution;
         for(int j = 0; j < mmc; j++){
             if(faixa[j] == -1){
                 faixa[j] = i + 1; //atribuindo tarefa
@@ -123,8 +163,8 @@ int main(void){
             }
             if(taskTimeExecution == 0){
                 j = taskPeriod - 1;
-                taskPeriod = taskPeriod  + mat[i][0];
-                taskTimeExecution = mat[i][1];
+                taskPeriod = taskPeriod  + tarefas[i].period;
+                taskTimeExecution = tarefas[i].timeExecution;
             }
         }
     }
