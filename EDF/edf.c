@@ -41,7 +41,7 @@ typedef struct Task{
 }Task;
 
 int get_next_abs_deadline(int * time, int i, int mmc){
-    for(; i < mmc; i++) 
+    for(; i < mmc + 1; i++) 
         if(time[i] != 0) 
             return time[i];
 }
@@ -141,11 +141,11 @@ int main(void){
     
     printf("\n##### TESTE DE ESCALABILIDADE #####\n");
     if(res <= 1){
-        puts("O sistema podera atender a todos os deadlines");
+        puts("O sistema talvez podera atender a todos os deadlines");
     }else{
         puts("O sistema nao atendera os deadlines");
     }
-    puts("###################################");
+    printf("###################################\n\n");
 
     // fazendo mmc, para achar o ciclo
     int periodos[TASKS_NUMBER];
@@ -179,7 +179,7 @@ int main(void){
     
 
     // marcando os deadlines na faixa de tempo
-    int deadlines[mmc];
+    int deadlines[mmc + 1];
     for(int i = 0; i < mmc; i++)
         deadlines[i] = 0;
         
