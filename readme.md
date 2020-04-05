@@ -1,10 +1,11 @@
 # Implementação de algoritmos de escalonamento em sistemas de tempo real
 
-Para compilar o arquivo  
-> make
+Para compilar o arquivo use  
 
-Para executar o arquivo
-> make run
+``` $ make ```
+
+Para executar o arquivo use  
+``` $ make run ```
 
 Formato padrao de entrada das tarefas
 > P C D  
