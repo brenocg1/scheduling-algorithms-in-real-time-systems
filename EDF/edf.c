@@ -32,11 +32,42 @@
 // ps: funciona tanto em formato LF e CRLF, no linux. 
 
 typedef struct Task{
-		int id;
+    int id;
     int period;
     int timeExecution;
+    int timeExecutionTemp;
     int deadline;
+    int apto;
 }Task;
+
+int get_next_abs_deadline(int * time, int i, int mmc){
+    for(; i < mmc; i++) 
+        if(time[i] != 0) 
+            return time[i];
+}
+
+
+Task * get_task_by_id(Task * tasks, size_t size, int id){
+    for(int i = 0; i < size; i++){
+        if(tasks[i].id == id) return &tasks[i];
+    }
+
+    return NULL;
+}
+
+
+int get_next_deadline(Task * tasks, size_t size){
+    int nextDeadlineId = -1;
+    int temp = 10000000;
+    for(int i = 0; i < size; i++){
+        if(tasks[i].apto == 1 && tasks[i].deadline < temp){
+            nextDeadlineId = tasks[i].id;
+            temp = tasks[i].deadline;
+        }
+    }
+    return nextDeadlineId;
+}
+
 
 // funcao para o quick sort saber comparar cada objeto da estrutura
 // de acordo com o deadline
@@ -108,14 +139,11 @@ int main(void){
         res += (float)mat[i][1] / (float)mat[i][0];
     }
     
-    // TASKS_NUMBER * (pow(2, (float)1 / (float)TASKS_NUMBER) - 1)
-    // para 3 TASKS sera 0,779
-    // nao irei arrendodar, como livro faz, usando 0,78.
     printf("\n##### TESTE DE ESCALABILIDADE #####\n");
-    if(res <= TASKS_NUMBER * (pow(2, (float)1 / (float)TASKS_NUMBER) - 1)){
-        puts("O sistema atendera todos os deadlines");
+    if(res <= 1){
+        puts("O sistema podera atender a todos os deadlines");
     }else{
-        puts("Nao podemos garantir que todos os deadlines serão sempre cumpridos");
+        puts("O sistema nao atendera os deadlines");
     }
     puts("###################################");
 
@@ -128,52 +156,81 @@ int main(void){
     // armazenando as tarefas num vetor de Tarefas
     Task tarefas[TASKS_NUMBER];
     for(int i = 0; i < TASKS_NUMBER; i++){
-        tarefas[i].id = i;
+        tarefas[i].id = i + 1;
         tarefas[i].period = mat[i][0];
         tarefas[i].timeExecution = mat[i][1];
         tarefas[i].deadline = mat[i][2];
+        tarefas[i].apto = 1;
+        tarefas[i].timeExecutionTemp = tarefas[i].timeExecution; 
     }
 
     // Ordenando as tarefas
     // usando quick sort da stdlib
     qsort (tarefas, TASKS_NUMBER, sizeof(Task), cmpTasks);
-
-
-    // for(int i = 0; i < TASKS_NUMBER; i++){
-    //     printf("%d %d %d \n", tarefas[i].period, tarefas[i].timeExecution, tarefas[i].deadline);
-    // }
     
-
     // escalonamento onde vou armezar as tarefas
     int faixa[mmc];
 
     // tirando lixo do vetor
-    // e preenchendo com -1
+    // e preenchendo com 0
     for(int i = 0; i < mmc; i++){
-        faixa[i] = -1;
+        faixa[i] = 0;
+    }
+    
+
+    // marcando os deadlines na faixa de tempo
+    int deadlines[mmc];
+    for(int i = 0; i < mmc; i++)
+        deadlines[i] = 0;
+        
+    for(int i = 0; i < TASKS_NUMBER; i++){
+        for(int j = 0; j < mmc;){
+            j += tarefas[i].deadline;
+            deadlines[j] = (-1) * tarefas[i].id;
+            j += (tarefas[i].period - tarefas[i].deadline);
+        }
     }
     
     // escalonamento em si 
-    // * estou considerando que os periodos estao ordenados na matrix
-    // tratarei isso dps
-    for(int i = 0; i < TASKS_NUMBER; i++){
-        int taskPeriod = tarefas[i].period;
-        int taskTimeExecution = tarefas[i].timeExecution;
-        for(int j = 0; j < mmc; j++){
-            if(faixa[j] == -1){
-                faixa[j] = tarefas[i].id + 1; //atribuindo tarefa
-                taskTimeExecution--;
-            }
-            if(taskTimeExecution == 0){
-                j = taskPeriod - 1;
-                taskPeriod = taskPeriod  + tarefas[i].period;
-                taskTimeExecution = tarefas[i].timeExecution;
+    for(int i = 0; i < mmc; i++){        
+        for(int j = 0; j < TASKS_NUMBER; j++){
+            if(tarefas[j].apto == 0 && (i % tarefas[j].period == 0)){
+                tarefas[j].apto = 1;
+                tarefas[j].timeExecutionTemp = tarefas[j].timeExecution; 
             }
         }
+        Task * t = NULL;
+        int k = i - 1;
+        int flag = 0;
+        do{
+            k++;
+            int taskId = (-1) * get_next_abs_deadline(deadlines, k, mmc);
+            t = get_task_by_id(tarefas, TASKS_NUMBER, taskId);
+            
+            if(t == NULL){
+                flag = 1;
+                break;
+            }
+        }while(t->apto != 1);
+
+        if(flag == 1){
+            for(int j = 0; j < TASKS_NUMBER; j++){
+                if(tarefas[j].apto == 0 && (i % tarefas[j].period == 0)){
+                    tarefas[j].apto = 1;
+                    tarefas[j].timeExecutionTemp = tarefas[j].timeExecution; 
+                }
+            }
+            continue;
+        }
+        
+        faixa[i] = t->id;
+        t->timeExecutionTemp--;
+
+        if(t->timeExecutionTemp == 0) t->apto = 0;
     }
 
     for(int i = 0; i < mmc; i++){
-        if(faixa[i] == -1){
+        if(faixa[i] == 0){
             printf("TEMPO %d - %d: Nenhuma Tarefa\n", i, i + 1);
         }else{
             printf("TEMPO %d - %d: Tarefa: %d\n", i, i + 1, faixa[i]);
